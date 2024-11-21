@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+group = 'com.filecompressor'
+version = '1.0-SNAPSHOT'
+application {
+    mainClass = 'com.filecompressor.Main'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+}
+
+javafx {
+    version = "17.0.13"
+    modules = [ 'javafx.controls', "javafx.fxml", "javafx.base", "javafx.graphics", "javafx.media", "javafx.swing", "javafx.web" ]
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

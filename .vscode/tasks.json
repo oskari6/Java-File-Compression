@@ -6,7 +6,7 @@
       "type": "shell",
       "command": "javac",
       "args": [
-        "--module-path C:/Program Files/Java/javafx-sdk-23.0.1/lib",
+        "--module-path C:/Program Files/Java/javafx-sdk-17.0.13/lib",
         "--add-modules",
         "javafx.controls,javafx.fxml",
         "-d",

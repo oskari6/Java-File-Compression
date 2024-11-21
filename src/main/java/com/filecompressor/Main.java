@@ -37,7 +37,7 @@ public class Main extends Application {
                     File compressedFile = fileCompressor.compress(selectedFile);
                     long compressedSize = compressedFile.length();
                     double compressionRatio = (1 - ((double) compressedSize / originalSize)) *100;
-                    compressionInfo.setText(String.format("Original size : %d bytes\nCompressed size: %d bytes\nCompression: %2f%%", originalSize, compressedSize, compressionRatio));
+                    compressionInfo.setText(String.format("Original size : %d bytes\nCompressed size: %d bytes\nCompression: %.1f%%", originalSize, compressedSize, compressionRatio));
                 } catch(Exception ex){
                     compressionInfo.setText("Error: " + ex.getMessage());
                 }
@@ -55,8 +55,8 @@ public class Main extends Application {
                     long originalSize = selectedFile.length();
                     File decompressedFile = fileCompressor.decompress(selectedFile);
                     long decompressedSize = decompressedFile.length();
-                    double decompressionRatio = (1 - ((double) decompressedSize / originalSize)) *100;
-                    compressionInfo.setText(String.format("Original size : %d bytes\nCompressed size: %d bytes\nCompression: %2f%%", originalSize, decompressedSize, decompressionRatio));
+                    double decompressionRatio = (1 - ((double) originalSize / decompressedSize)) *100;
+                    compressionInfo.setText(String.format("Compressed size : %d bytes\nDecompressed size: %d bytes\nDecompression: %.1f%%", originalSize, decompressedSize, decompressionRatio));
                 } catch(Exception ex){
                     compressionInfo.setText("Error: " + ex.getMessage());
                 }

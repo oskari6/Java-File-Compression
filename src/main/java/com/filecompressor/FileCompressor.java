@@ -4,61 +4,83 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.css.Match;
-
 public class FileCompressor {
-    private static final int SEARCH_BUFFER_SIZE = 1024;
-    private static final int LOOKAHEAD_BUFFER_SIZE = 16;
+    private static int SEARCH_BUFFER_SIZE = 1024;
+    private static int LOOKAHEAD_BUFFER_SIZE = 16;
     /*LZ77 file compression*/
    
     public File compress(File file) throws IOException {
-        File compressedFile = new File(file.getParent(), file.getName() +".lz77");
-        File readableFile = new File(file.getParent(), file.getName() + ".debug.txt"); // Human-readable file
+        File compressedFile = new File(file.getParent(), file.getName() + ".lz77");
+        
+        long fileSize = file.length();
+        //huffman coding
+        if(fileSize  <= 100){
+            SmallFileCompressor smallFileCompressor = new SmallFileCompressor();
+            return smallFileCompressor.compress(file);
+        } if (fileSize <= 1024) { // File size <= 1 KB
+            SEARCH_BUFFER_SIZE = 512;
+            LOOKAHEAD_BUFFER_SIZE = 16;
+        } else if (fileSize <= 10240) { // File size <= 10 KB
+            SEARCH_BUFFER_SIZE = 1024;
+            LOOKAHEAD_BUFFER_SIZE = 64;
+        } else if (fileSize <= 1048576) { // File size <= 1 MB
+            SEARCH_BUFFER_SIZE = 8192;
+            LOOKAHEAD_BUFFER_SIZE = 128;
+        } else { // File size > 1 MB
+            SEARCH_BUFFER_SIZE = 32768;
+            LOOKAHEAD_BUFFER_SIZE = 256;
+        }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file));
-            DataOutputStream output = new DataOutputStream(new FileOutputStream(compressedFile));
-         BufferedWriter debugWriter = new BufferedWriter(new FileWriter(readableFile))) {
-
-            StringBuilder searchBuffer = new StringBuilder();
+             DataOutputStream output = new DataOutputStream(new FileOutputStream(compressedFile))) {
+    
+            char[] searchBuffer = new char[SEARCH_BUFFER_SIZE];
+            int searchBufferEnd = 0; // Tracks the end of valid data
             char[] lookaheadBuffer = new char[LOOKAHEAD_BUFFER_SIZE];
             int bytesRead;
-
-            while((bytesRead = reader.read(lookaheadBuffer)) != -1){
+    
+            while ((bytesRead = reader.read(lookaheadBuffer)) != -1) {
                 int i = 0;
+    
                 while (i < bytesRead) {
+                    String searchBufferContent = new String(searchBuffer, 0, searchBufferEnd);
                     String lookaheadSubstring = new String(lookaheadBuffer, i, bytesRead - i);
-                    Match match = findLongestMatch(searchBuffer.toString(), lookaheadSubstring);
-
-                    if(match.length > 1){
-                        output.writeByte(1);
+                    Match match = findLongestMatch(searchBufferContent, lookaheadSubstring);
+    
+                    if (match.length > 1) { // Write match
+                        output.writeByte(1); // Match flag
                         output.writeShort(match.offset);
                         output.writeShort(match.length);
-                        debugWriter.write(String.format("Match: Offset=%d, Length=%d%n", match.offset, match.length));
-
+    
+                        for (int j = 0; j < match.length; j++) {
+                            // Add matched characters to circular buffer
+                            searchBuffer[searchBufferEnd % SEARCH_BUFFER_SIZE] = lookaheadBuffer[i + j];
+                            searchBufferEnd = (searchBufferEnd + 1) % SEARCH_BUFFER_SIZE;
+                        }
                         i += match.length;
-                    }else{
-                        output.writeByte(0);
-                        output.writeByte((byte)lookaheadBuffer[i]);
-                        debugWriter.write(String.format("Char: %c%n", lookaheadBuffer[i]));
+                    } else { // Write single character
+                        output.writeByte(0); // Single character flag
+                        output.writeByte((byte) lookaheadBuffer[i]);
+                        searchBuffer[searchBufferEnd % SEARCH_BUFFER_SIZE] = lookaheadBuffer[i];
+                        searchBufferEnd = (searchBufferEnd + 1) % SEARCH_BUFFER_SIZE;
                         i++;
-                    }
-
-                    searchBuffer.append(lookaheadBuffer[i - 1]);
-                    if(searchBuffer.length() > SEARCH_BUFFER_SIZE){
-                        searchBuffer.delete(0, searchBuffer.length() - SEARCH_BUFFER_SIZE);
                     }
                 }
             }
         }
+    
         return compressedFile;
     }
 
     public File decompress(File file) throws IOException {
-        if(!file.getName().endsWith(".lz77")){
-            throw new IllegalArgumentException("File is not in correct format(.lz77)");
+        if (!(file.getName().endsWith(".lz77") || file.getName().endsWith(".huffman"))) {
+            throw new IllegalArgumentException("Unsupported file format: " + file.getName());
         }
-        
-        File decompressedFile = new File(file.getParent(), file.getName().replace(".lz77", "decompressed"));
+        if (file.getName().endsWith(".huffman")) {
+            SmallFileCompressor smallFileCompressor = new SmallFileCompressor();
+            return smallFileCompressor.decompress(file);
+        }
+        File decompressedFile = new File(file.getParent(), "decompressed-" + file.getName().replace(".lz77", ""));
         try (DataInputStream input = new DataInputStream(new FileInputStream(file));
             BufferedWriter writer = new BufferedWriter(new FileWriter(decompressedFile))){
             
@@ -70,7 +92,6 @@ public class FileCompressor {
                     int offset = input.readShort();
                     int length = input.readShort();
                     int startIndex = decompressedData.length() - offset;
-
                     for(int i = 0; i < length; i++){
                         decompressedData.append(decompressedData.charAt(startIndex +i));
                     }
