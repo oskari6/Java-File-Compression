@@ -3,15 +3,12 @@ package com.filecompressor;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
-import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 
 //javac --module-path "C:/Program Files/Java/javafx-sdk-23.0.1/lib" --add-modules javafx.controls,javafx.fxml Main.java
 
@@ -21,13 +18,13 @@ public class Main extends Application {
     public void start (Stage primaryStage){
         Label label = new Label("No file selected");
         Label compressionInfo = new Label();
-        Button textButton = new Button("Compress File");
-        Button textButton2 = new Button("Decompress File");
+        Button compressButton = new Button("Compress File");
+        Button decompressButton = new Button("Decompress File");
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose a file");
 
-        textButton.setOnAction(e -> {
+        compressButton.setOnAction(e -> {
             File selectedFile = fileChooser.showOpenDialog(primaryStage);
             if(selectedFile != null){
                 label.setText("Selected file: " + selectedFile.getAbsolutePath());
@@ -46,7 +43,7 @@ public class Main extends Application {
                 compressionInfo.setText("");
             }
         });
-        textButton2.setOnAction(e -> {
+        decompressButton.setOnAction(e -> {
             File selectedFile = fileChooser.showOpenDialog(primaryStage);
             if(selectedFile != null){
                 label.setText("Selected file: " + selectedFile.getAbsolutePath());
@@ -66,7 +63,7 @@ public class Main extends Application {
             }
         });
 
-        VBox root = new VBox(10, label, textButton, textButton2,compressionInfo);
+        VBox root = new VBox(10, label, compressButton, decompressButton,compressionInfo);
         root.setStyle("-fx-padding: 20; -fx-alignment: center;");
 
         Scene scene = new Scene(root, 400, 300);
