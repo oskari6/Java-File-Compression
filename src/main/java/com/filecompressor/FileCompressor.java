@@ -73,10 +73,10 @@ public class FileCompressor {
     }
 
     public File decompress(File file) throws IOException {
-        if (!(file.getName().endsWith(".lz77") || file.getName().endsWith(".huffman"))) {
+        if (!(file.getName().endsWith(".lz77") || file.getName().endsWith(".bpe"))) {
             throw new IllegalArgumentException("Unsupported file format: " + file.getName());
         }
-        if (file.getName().endsWith(".huffman")) {
+        if (file.getName().endsWith(".bpe")) {
             SmallFileCompressor smallFileCompressor = new SmallFileCompressor();
             return smallFileCompressor.decompress(file);
         }
